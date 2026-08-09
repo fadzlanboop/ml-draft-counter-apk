@@ -1,0 +1,11 @@
+{
+  "appId": "com.oo.mldraftcounter",
+  "appName": "ML Draft Counter",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

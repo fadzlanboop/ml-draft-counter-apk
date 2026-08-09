@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e17">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MLCounter">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>ML Draft Counter</title>
+<style>
+  :root{
+    --bg:#0a0e17;
+    --panel:#121826;
+    --panel2:#182238;
+    --line:#243049;
+    --gold:#e8b64c;
+    --teal:#4cd6c4;
+    --red:#e05a5a;
+    --text:#e9edf5;
+    --sub:#7c8aa8;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    overflow:hidden;
+  }
+  #app{ height:100dvh; display:flex; flex-direction:column; }
+
+  /* HEADER */
+  header{
+    flex:0 0 auto;
+    padding:14px 16px 10px;
+    background:linear-gradient(180deg,#0d1220,#0a0e17);
+    border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  header h1{
+    font-size:15px; margin:0; font-weight:800; letter-spacing:.04em;
+    color:var(--gold); text-transform:uppercase;
+  }
+  header h1 span{color:var(--teal);}
+  #resetBtn{
+    background:var(--panel2); border:1px solid var(--line); color:var(--sub);
+    font-size:11px; padding:7px 12px; border-radius:8px; font-weight:600;
+  }
+
+  /* ENEMY PICKS BAR */
+  #enemyBar{
+    flex:0 0 auto;
+    display:flex; gap:8px; padding:10px 14px; overflow-x:auto;
+    background:var(--panel); border-bottom:1px solid var(--line);
+    min-height:56px; align-items:center;
+  }
+  .empty-hint{ color:var(--sub); font-size:12px; }
+  .pick-chip{
+    display:flex; align-items:center; gap:6px;
+    background:var(--panel2); border:1px solid var(--red);
+    border-radius:20px; padding:6px 8px 6px 10px; flex:0 0 auto;
+  }
+  .pick-chip .dot{
+    width:8px; height:8px; border-radius:50%; background:var(--red); flex:0 0 auto;
+  }
+  .pick-chip span{ font-size:12.5px; font-weight:600; white-space:nowrap; }
+  .pick-chip button{
+    background:none; border:none; color:var(--sub); font-size:15px;
+    padding:2px 4px; line-height:1;
+  }
+
+  /* SUGGESTIONS */
+  #suggestPanel{
+    flex:0 0 auto;
+    padding:10px 14px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  #suggestPanel h2{
+    font-size:10.5px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--sub); margin:0 0 8px;
+  }
+  #suggestList{
+    display:flex; gap:8px; overflow-x:auto; padding-bottom:10px;
+  }
+  .sugg-card{
+    flex:0 0 auto; width:150px;
+    background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--teal); border-radius:12px; padding:10px;
+  }
+  .sugg-card .name{ font-weight:800; font-size:14px; color:var(--teal); }
+  .sugg-card .role{ font-size:10px; color:var(--sub); margin-bottom:6px; }
+  .sugg-card .why{ font-size:11px; color:var(--text); line-height:1.35; opacity:.9; }
+  .sugg-card .vs{ font-size:9.5px; color:var(--gold); margin-top:6px; }
+
+  /* SEARCH */
+  #searchWrap{ padding:10px 14px 6px; flex:0 0 auto; }
+  #search{
+    width:100%; background:var(--panel2); border:1px solid var(--line);
+    color:var(--text); border-radius:10px; padding:11px 14px; font-size:15px;
+  }
+  #roleFilter{ display:flex; gap:6px; margin-top:8px; overflow-x:auto; }
+  .role-pill{
+    flex:0 0 auto; padding:6px 12px; border-radius:20px; font-size:11.5px;
+    background:var(--panel2); border:1px solid var(--line); color:var(--sub); font-weight:700;
+  }
+  .role-pill.active{ background:var(--gold); color:#1a1408; border-color:var(--gold); }
+
+  /* HERO GRID */
+  #grid{
+    flex:1 1 auto; overflow-y:auto;
+    display:grid; grid-template-columns:repeat(4,1fr);
+    grid-auto-rows:max-content; align-content:start; align-items:start;
+    gap:8px;
+    padding:8px 14px 24px;
+  }
+  .hero-btn{
+    background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+    padding:10px 4px 8px; display:flex; flex-direction:column; align-items:center;
+    align-self:start; gap:4px; color:var(--text);
+  }
+  .hero-btn:active{ background:var(--gold); color:#1a1408; }
+  .hero-btn .ini{
+    width:38px; height:38px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:14px; color:#0a0e17;
+  }
+  .hero-btn .n{ font-size:11px; font-weight:700; text-align:center; line-height:1.15; }
+  .hero-btn .r{ font-size:8.5px; color:var(--sub); text-transform:uppercase; }
+  .hero-btn.disabled{ opacity:.3; }
+
+  ::-webkit-scrollbar{ display:none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>ML <span>Draft</span> Counter</h1>
+    <button id="resetBtn">Reset</button>
+  </header>
+
+  <button id="bubbleBtn" style="display:none; margin:8px 14px 0; background:#182238; border:1px solid #e8b64c; color:#e8b64c; padding:8px 12px; border-radius:8px; font-size:11px; font-weight:700;">Aktifkan Bubble Mengambang</button>
+
+  <div id="enemyBar"><span class="empty-hint">Tap hero musuh di bawah untuk mulai...</span></div>
+
+  <div id="suggestPanel" style="display:none;">
+    <h2>Rekomendasi Counter</h2>
+    <div id="suggestList"></div>
+  </div>
+
+  <div id="searchWrap">
+    <input id="search" type="text" placeholder="Cari hero musuh..." autocomplete="off">
+    <div id="roleFilter"></div>
+  </div>
+
+  <div id="grid"></div>
+</div>
+
+<script>
+// ---------- HERO DATA ----------
+// counters: hero yang bagus melawan hero ini, dengan alasan singkat
+const HEROES = [
+{n:"Tigreal",r:"Tank",c:[["Freya","Mobilitas tinggi, lolos dari initiate ult"],["Khufra","CC balik saat Tigreal masuk"],["Karrie","True damage tembus tank"]]},
+{n:"Franco",r:"Tank",c:[["Diggie","Cleanse hook dengan cepat"],["Angela","Shield menahan hook combo"],["Uranus","Regen tinggi, tahan combo"]]},
+{n:"Khufra",r:"Tank",c:[["Lylia","Bisa stun duluan sebelum ult Khufra"],["Terizla","Damage besar tembus barrel roll"],["Esmeralda","Shield redam burst combo"]]},
+{n:"Atlas",r:"Tank",c:[["Diggie","Cleanse ult tarikan Atlas"],["Lolita","Shield block ult area"],["Karrie","Ignore evasion, damage stabil"]]},
+{n:"Hylos",r:"Tank",c:[["Karrie","True damage & ignore evasion"],["Chang'e","Damage jarak jauh, kabur dari heal Hylos"],["Valentina","Burst tinggi + steal ult"]]},
+{n:"Belerick",r:"Tank",c:[["Chang'e","Poke jarak jauh, hindari damage reflect"],["Karrie","True damage tembus regen"],["Lunox","Burst magic cepat"]]},
+{n:"Uranus",r:"Tank",c:[["Valentina","Burst cepat sebelum regen aktif"],["Lylia","CC lock + burst magic"],["Karrie","True damage tembus armor"]]},
+{n:"Gatotkaca",r:"Tank",c:[["Diggie","Cleanse stun ult"],["Esmeralda","Shield redam combo"],["Kagura","Kabur dari area ult dengan payung"]]},
+{n:"Grock",r:"Tank",c:[["Chang'e","Poke dari jauh sebelum wall combo"],["Karrie","Ignore shield & armor"],["Lylia","Stun sebelum Grock combo"]]},
+{n:"Akai",r:"Tank",c:[["Diggie","Cleanse ult drum"],["Freya","Lompat keluar area ult"],["Valentina","Burst sebelum ult keluar"]]},
+{n:"Johnson",r:"Tank",c:[["Diggie","Cleanse stun setelah transformasi"],["Angela","Shield redam combo tabrakan"],["Karrie","Damage tembus tank"]]},
+{n:"Minotaur",r:"Tank",c:[["Esmeralda","Shield redam combo rage"],["Karrie","True damage stabil"],["Lylia","Stun sebelum combo mulai"]]},
+{n:"Barats",r:"Tank",c:[["Diggie","Cleanse pull rantai"],["Karrie","Ignore shield"],["Lylia","CC lebih dulu"]]},
+{n:"Edith",r:"Tank",c:[["Lylia","Stun sebelum mode robot combo"],["Karrie","True damage tembus shield"],["Wanwan","Damage stabil, sulit dikunci"]]},
+{n:"Chou",r:"Fighter",c:[["Khufra","Interupsi kick combo dengan stun"],["Franco","Hook duluan sebelum Chou combo"],["Uranus","Regen tinggi, tahan combo"]]},
+{n:"Paquito",r:"Fighter",c:[["Khufra","CC lock sebelum combo dash"],["Esmeralda","Shield redam burst"],["Uranus","Regen imbangi damage"]]},
+{n:"Yu Zhong",r:"Fighter",c:[["Khufra","Interupsi transformasi naga"],["Lylia","Burst + CC sebelum sustain aktif"],["Karrie","True damage tembus sustain"]]},
+{n:"Guinevere",r:"Fighter",c:[["Khufra","CC sebelum ult area"],["Diggie","Cleanse follow-up combo"],["Esmeralda","Shield redam burst gelombang"]]},
+{n:"Fredrinn",r:"Fighter",c:[["Karrie","Ignore shield stack"],["Lylia","Burst cepat sebelum ult heal"],["Valentina","Steal skill saat overload"]]},
+{n:"Ruby",r:"Fighter",c:[["Khufra","Interupsi ult tarikan berantai"],["Karrie","True damage tembus lifesteal"],["Esmeralda","Shield redam burst"]]},
+{n:"Freya",r:"Fighter",c:[["Khufra","CC kuat tahan combo sword"],["Esmeralda","Shield redam damage berlapis"],["Franco","Hook interupsi combo"]]},
+{n:"Alucard",r:"Fighter",c:[["Khufra","CC interupsi ult sabetan"],["Esmeralda","Shield redam lifesteal combo"],["Franco","Hook sebelum combo dimulai"]]},
+{n:"Aldous",r:"Fighter",c:[["Khufra","CC sebelum ult stack damage"],["Franco","Hook cegah farm stack"],["Karrie","True damage tembus stack"]]},
+{n:"Lapu-Lapu",r:"Fighter",c:[["Khufra","Interupsi combo dua mode"],["Esmeralda","Shield redam burst"],["Franco","Hook sebelum combo"]]},
+{n:"Balmond",r:"Fighter",c:[["Khufra","CC sebelum ult eksekusi"],["Diggie","Cleanse combo lanjutan"],["Karrie","Damage stabil tembus lifesteal"]]},
+{n:"Bane",r:"Fighter",c:[["Diggie","Cleanse stun ult"],["Esmeralda","Shield redam burst area"],["Khufra","Interupsi combo"]]},
+{n:"Terizla",r:"Fighter",c:[["Khufra","CC sebelum stun combo"],["Esmeralda","Shield redam damage besar"],["Lylia","Burst cepat, hindari jangkauan"]]},
+{n:"X.Borg",r:"Fighter",c:[["Diggie","Cleanse combo bakar"],["Karrie","Ignore armor saat overdrive"],["Esmeralda","Shield redam ult area"]]},
+{n:"Silvanna",r:"Fighter",c:[["Khufra","Interupsi ult area lingkaran"],["Esmeralda","Shield redam combo"],["Franco","Hook sebelum ult"]]},
+{n:"Julian",r:"Fighter",c:[["Khufra","CC sebelum combo dash"],["Esmeralda","Shield redam burst gabungan"],["Lylia","Burst cepat sebelum sustain"]]},
+{n:"Phoveus",r:"Fighter",c:[["Khufra","Interupsi mode ult"],["Esmeralda","Shield redam damage pantulan"],["Diggie","Cleanse fear/silence"]]},
+{n:"Ling",r:"Assassin",c:[["Khufra","CC saat Ling di udara/bambu"],["Diggie","Cleanse burst combo"],["Franco","Hook sebelum reset combo"]]},
+{n:"Hayabusa",r:"Assassin",c:[["Khufra","Interupsi ult shadow kill"],["Diggie","Cleanse stun awal"],["Franco","Hook sebelum shadow combo"]]},
+{n:"Lancelot",r:"Assassin",c:[["Khufra","CC tembus dash counter"],["Diggie","Cleanse combo lanjutan"],["Franco","Hook interupsi dash"]]},
+{n:"Gusion",r:"Assassin",c:[["Khufra","Interupsi combo blink"],["Diggie","Cleanse stun/silence"],["Franco","Hook sebelum burst combo"]]},
+{n:"Karina",r:"Assassin",c:[["Diggie","Cleanse ult eksekusi"],["Khufra","CC sebelum burst"],["Franco","Hook sebelum reset ult"]]},
+{n:"Helcurt",r:"Assassin",c:[["Lolita","Shield block burst ult stealth"],["Khufra","CC tembus stealth"],["Diggie","Cleanse silence area"]]},
+{n:"Fanny",r:"Assassin",c:[["Khufra","CC hentikan cable combo"],["Franco","Hook interupsi cable"],["Diggie","Cleanse combo lanjutan"]]},
+{n:"Natalia",r:"Assassin",c:[["Lolita","Shield block burst dari stealth"],["Diggie","Cleanse stun ult"],["Khufra","CC tembus invisibility"]]},
+{n:"Saber",r:"Assassin",c:[["Diggie","Cleanse lock ult sebelum eksekusi"],["Khufra","CC sebelum ult combo"],["Lolita","Shield redam ult lock"]]},
+{n:"Benedetta",r:"Assassin",c:[["Khufra","Interupsi combo dance dimension"],["Diggie","Cleanse stun awal"],["Franco","Hook sebelum reset"]]},
+{n:"Aamon",r:"Assassin",c:[["Khufra","CC tembus shadow step"],["Diggie","Cleanse burst combo"],["Franco","Hook interupsi mobilitas"]]},
+{n:"Joy",r:"Assassin",c:[["Khufra","CC tembus link dash"],["Diggie","Cleanse combo lanjutan"],["Franco","Hook sebelum link combo"]]},
+{n:"Kagura",r:"Mage",c:[["Khufra","CC sebelum combo payung"],["Franco","Hook interupsi jarak jauh"],["Karrie","Damage stabil abaikan shield"]]},
+{n:"Lylia",r:"Mage",c:[["Franco","Hook tembus minion swarm"],["Khufra","CC sebelum burst combo"],["Karrie","Ignore shield burst"]]},
+{n:"Valentina",r:"Mage",c:[["Khufra","CC sebelum steal ultimate"],["Franco","Hook interupsi combo"],["Karrie","Damage stabil tembus shield"]]},
+{n:"Pharsa",r:"Mage",c:[["Khufra","CC sebelum ult burung"],["Franco","Hook jangkau posisi jauh"],["Wanwan","Mobilitas kejar poke"]]},
+{n:"Cecilion",r:"Mage",c:[["Franco","Hook interupsi channel ult"],["Khufra","CC saat channel"],["Wanwan","Kejar & burst cepat"]]},
+{n:"Esmeralda",r:"Mage",c:[["Karrie","Ignore shield energi"],["Khufra","CC sebelum shield aktif"],["Valentina","Steal ult shield/dash"]]},
+{n:"Vale",r:"Mage",c:[["Khufra","CC sebelum ult tornado"],["Franco","Hook interupsi combo"],["Karrie","Damage stabil abaikan knock-up"]]},
+{n:"Chang'e",r:"Mage",c:[["Franco","Hook jangkau hero poke jauh"],["Khufra","CC sebelum kabur"],["Wanwan","Mobilitas tinggi mengejar"]]},
+{n:"Harith",r:"Mage",c:[["Khufra","CC saat dash portal"],["Franco","Hook interupsi combo"],["Diggie","Cleanse stun ult"]]},
+{n:"Xavier",r:"Mage",c:[["Franco","Hook interupsi mark combo"],["Khufra","CC sebelum burst mark"],["Wanwan","Kejar & tekan cepat"]]},
+{n:"Yve",r:"Mage",c:[["Franco","Hook tembus zona kotak"],["Khufra","CC sebelum ult area"],["Karrie","Damage stabil abaikan slow"]]},
+{n:"Novaria",r:"Mage",c:[["Franco","Hook interupsi combo poke"],["Khufra","CC sebelum burst"],["Wanwan","Mobilitas tekan jarak dekat"]]},
+{n:"Beatrix",r:"Marksman",c:[["Franco","Hook interupsi mode senjata"],["Khufra","CC sebelum burst combo"],["Helcurt","Silence + burst dari stealth"]]},
+{n:"Melissa",r:"Marksman",c:[["Franco","Hook tembus benang boneka"],["Helcurt","Burst dari stealth sebelum web"],["Khufra","CC interupsi jaring"]]},
+{n:"Claude",r:"Marksman",c:[["Franco","Hook pisahkan dari partner"],["Khufra","CC sebelum combo ricochet"],["Helcurt","Silence sebelum ult"]]},
+{n:"Granger",r:"Marksman",c:[["Franco","Hook interupsi reload combo"],["Khufra","CC sebelum ult peluru"],["Helcurt","Silence dari stealth"]]},
+{n:"Wanwan",r:"Marksman",c:[["Franco","Hook tembus dash lompat"],["Khufra","CC kunci sebelum combo"],["Helcurt","Silence dari stealth"]]},
+{n:"Karrie",r:"Marksman",c:[["Franco","Hook interupsi ignore combo"],["Khufra","CC sebelum burst"],["Helcurt","Silence + burst stealth"]]},
+{n:"Brody",r:"Marksman",c:[["Franco","Hook interupsi combo eksekusi"],["Khufra","CC sebelum ult"],["Helcurt","Silence sebelum burst"]]},
+{n:"Moskov",r:"Marksman",c:[["Franco","Hook tembus ult tombak"],["Khufra","CC sebelum poke combo"],["Helcurt","Silence dari stealth"]]},
+{n:"Bruno",r:"Marksman",c:[["Franco","Hook interupsi combo bola"],["Khufra","CC sebelum burst"],["Helcurt","Silence + burst stealth"]]},
+{n:"Angela",r:"Support",c:[["Lolita","Shield block ult lock partner"],["Karrie","Ignore shield partner Angela"],["Franco","Hook sebelum ult lock"]]},
+{n:"Mathilda",r:"Support",c:[["Franco","Hook interupsi mobilitas tim"],["Khufra","CC sebelum shield tim"],["Karrie","Damage stabil abaikan shield"]]},
+{n:"Diggie",r:"Support",c:[["Helcurt","Silence sebelum cleanse aktif"],["Franco","Hook cepat sebelum ult"],["Karrie","Damage stabil abaikan shield telur"]]},
+{n:"Estes",r:"Support",c:[["Karrie","True damage abaikan heal area"],["Franco","Hook pisahkan dari tim"],["Helcurt","Silence sebelum heal ult"]]},
+{n:"Rafaela",r:"Support",c:[["Franco","Hook interupsi heal beam"],["Khufra","CC sebelum ult speed"],["Karrie","Damage stabil abaikan heal"]]},
+{n:"Floryn",r:"Support",c:[["Karrie","True damage abaikan heal tim"],["Franco","Hook pisahkan dari carry"],["Helcurt","Silence sebelum heal combo"]]},
+{n:"Lolita",r:"Support",c:[["Karrie","Ignore shield sepenuhnya"],["Franco","Hook sebelum shield aktif"],["Khufra","CC sebelum shield"]]},
+];
+
+const ROLES = ["Semua","Tank","Fighter","Assassin","Mage","Marksman","Support"];
+const ROLE_COLOR = {Tank:"#6b8cff",Fighter:"#e05a5a",Assassin:"#a86bff",Mage:"#4cd6c4",Marksman:"#e8b64c",Support:"#5ce08a"};
+
+let enemyPicks = []; // array of hero names
+let activeRole = "Semua";
+let query = "";
+
+const grid = document.getElementById('grid');
+const enemyBar = document.getElementById('enemyBar');
+const suggestPanel = document.getElementById('suggestPanel');
+const suggestList = document.getElementById('suggestList');
+const roleFilter = document.getElementById('roleFilter');
+const search = document.getElementById('search');
+
+function initials(name){
+  return name.split(/[\s'\.]/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
+
+function renderRolePills(){
+  roleFilter.innerHTML = ROLES.map(r =>
+    `<button class="role-pill ${r===activeRole?'active':''}" data-role="${r}">${r}</button>`
+  ).join('');
+  roleFilter.querySelectorAll('.role-pill').forEach(btn=>{
+    btn.onclick = ()=>{ activeRole = btn.dataset.role; renderRolePills(); renderGrid(); };
+  });
+}
+
+function renderGrid(){
+  const q = query.trim().toLowerCase();
+  const list = HEROES.filter(h=>{
+    const matchRole = activeRole==="Semua" || h.r===activeRole;
+    const matchQuery = !q || h.n.toLowerCase().includes(q);
+    return matchRole && matchQuery;
+  });
+  grid.innerHTML = list.map(h=>{
+    const picked = enemyPicks.includes(h.n);
+    return `<button class="hero-btn ${picked?'disabled':''}" data-name="${h.n}" ${picked?'disabled':''}>
+      <div class="ini" style="background:${ROLE_COLOR[h.r]}">${initials(h.n)}</div>
+      <div class="n">${h.n}</div>
+      <div class="r">${h.r}</div>
+    </button>`;
+  }).join('');
+  grid.querySelectorAll('.hero-btn:not(.disabled)').forEach(btn=>{
+    btn.onclick = ()=> addEnemy(btn.dataset.name);
+  });
+}
+
+function addEnemy(name){
+  if(enemyPicks.includes(name) || enemyPicks.length>=5) return;
+  enemyPicks.push(name);
+  renderEnemyBar();
+  renderSuggestions();
+  renderGrid();
+}
+function removeEnemy(name){
+  enemyPicks = enemyPicks.filter(n=>n!==name);
+  renderEnemyBar();
+  renderSuggestions();
+  renderGrid();
+}
+
+function renderEnemyBar(){
+  if(enemyPicks.length===0){
+    enemyBar.innerHTML = `<span class="empty-hint">Tap hero musuh di bawah untuk mulai...</span>`;
+    return;
+  }
+  enemyBar.innerHTML = enemyPicks.map(name=>{
+    const h = HEROES.find(x=>x.n===name);
+    return `<div class="pick-chip" style="border-color:${ROLE_COLOR[h.r]}">
+      <span class="dot" style="background:${ROLE_COLOR[h.r]}"></span>
+      <span>${name}</span>
+      <button data-name="${name}">×</button>
+    </div>`;
+  }).join('');
+  enemyBar.querySelectorAll('button[data-name]').forEach(btn=>{
+    btn.onclick = ()=> removeEnemy(btn.dataset.name);
+  });
+}
+
+function pushToOverlayBubble(text){
+  // Hanya aktif saat berjalan sebagai app Android (Capacitor), diabaikan saat di browser biasa
+  try{
+    if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.OverlayBridge){
+      window.Capacitor.Plugins.OverlayBridge.write({ text });
+    }
+  }catch(e){ /* aman diabaikan di browser */ }
+}
+
+function renderSuggestions(){
+  if(enemyPicks.length===0){
+    suggestPanel.style.display='none';
+    pushToOverlayBubble('Belum ada rekomendasi');
+    return;
+  }
+  suggestPanel.style.display='block';
+  // aggregate counter scores across all enemy picks
+  const scoreMap = {}; // counterName -> {score, reasons:[{vs, why}], role}
+  enemyPicks.forEach(enemyName=>{
+    const h = HEROES.find(x=>x.n===enemyName);
+    if(!h) return;
+    h.c.forEach(([counterName, why])=>{
+      if(enemyPicks.includes(counterName)) return; // don't suggest a hero enemy already has... loosely
+      if(!scoreMap[counterName]) scoreMap[counterName] = {score:0, reasons:[], role: (HEROES.find(x=>x.n===counterName)||{}).r || ""};
+      scoreMap[counterName].score += 1;
+      scoreMap[counterName].reasons.push({vs:enemyName, why});
+    });
+  });
+  const ranked = Object.entries(scoreMap).sort((a,b)=>b[1].score-a[1].score).slice(0,8);
+  if(ranked.length===0){
+    suggestList.innerHTML = `<div style="color:var(--sub); font-size:12px;">Belum ada data counter untuk kombinasi ini.</div>`;
+    return;
+  }
+  suggestList.innerHTML = ranked.map(([name, data])=>{
+    const topReason = data.reasons[0];
+    const extra = data.reasons.length>1 ? ` (+${data.reasons.length-1} lainnya)` : '';
+    return `<div class="sugg-card" style="border-color:${ROLE_COLOR[data.role]||'var(--teal)'}">
+      <div class="name">${name}</div>
+      <div class="role">${data.role}</div>
+      <div class="why">${topReason.why}${extra}</div>
+      <div class="vs">vs ${topReason.vs}</div>
+    </div>`;
+  }).join('');
+
+  const summary = ranked.slice(0,3).map(([name])=>name).join(' / ');
+  pushToOverlayBubble('Pilih: ' + summary);
+}
+
+document.getElementById('resetBtn').onclick = ()=>{
+  enemyPicks = [];
+  renderEnemyBar();
+  renderSuggestions();
+  renderGrid();
+};
+
+search.oninput = (e)=>{ query = e.target.value; renderGrid(); };
+
+renderRolePills();
+renderEnemyBar();
+renderGrid();
+
+// tombol bubble hanya muncul saat berjalan sebagai app Android (Capacitor)
+if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.OverlayBridge){
+  const bubbleBtn = document.getElementById('bubbleBtn');
+  bubbleBtn.style.display = 'block';
+  bubbleBtn.onclick = ()=> window.Capacitor.Plugins.OverlayBridge.startBubble();
+}
+
+// register service worker for offline / installable app behavior
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>

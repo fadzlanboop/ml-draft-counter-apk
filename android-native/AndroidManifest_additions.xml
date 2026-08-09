@@ -1,0 +1,13 @@
+<!--
+  Tempel bagian ini ke android/app/src/main/AndroidManifest.xml
+  bawaan project Capacitor kamu.
+-->
+
+<!-- 1) Taruh permission ini SEBELUM tag <application> -->
+<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+<!-- 2) Taruh tag <service> ini DI DALAM tag <application> ...</application> -->
+<service
+    android:name=".FloatingBubbleService"
+    android:exported="false"
+    android:foregroundServiceType="specialUse" />

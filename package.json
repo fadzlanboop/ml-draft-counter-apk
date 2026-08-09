@@ -1,0 +1,15 @@
+{
+  "name": "ml-draft-counter-app",
+  "version": "1.0.0",
+  "description": "ML Draft Counter dibungkus jadi aplikasi Android via Capacitor",
+  "scripts": {
+    "build": "echo 'Situs statis, tidak perlu build. Folder www/ sudah siap.'"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/android": "^6.1.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  }
+}
