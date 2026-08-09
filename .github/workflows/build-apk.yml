@@ -38,7 +38,7 @@ jobs:
         run: |
           mkdir -p android/app/src/main/java/com/oo/mldraftcounter
           cp android-native/OverlayBridgePlugin.java android/app/src/main/java/com/oo/mldraftcounter/OverlayBridgePlugin.java
-          cp android-native/FloatingBubbleService.kt android/app/src/main/java/com/oo/mldraftcounter/FloatingBubbleService.kt
+          cp android-native/FloatingBubbleService.java android/app/src/main/java/com/oo/mldraftcounter/FloatingBubbleService.java
           cp android-native/MainActivity.java android/app/src/main/java/com/oo/mldraftcounter/MainActivity.java
           cp android-native/AndroidManifest_full.xml android/app/src/main/AndroidManifest.xml
 
